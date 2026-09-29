@@ -1,0 +1,161 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User account profile and travel preferences",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Unique identifier matching Firebase Auth UID" },
+        "email": { "type": "string", "format": "email", "description": "User email address" },
+        "displayName": { "type": "string", "description": "User full name" },
+        "phone": { "type": "string", "description": "Customer mobile phone number" },
+        "photoURL": { "type": "string", "description": "User profile avatar URL" },
+        "role": { "type": "string", "enum": ["customer", "admin"], "description": "User role authorization" },
+        "savedPickupAddress": { "type": "string", "description": "Default or saved pickup address" },
+        "emergencyContact": { "type": "string", "description": "Emergency contact name and phone" },
+        "createdAt": { "type": "string", "description": "ISO timestamp or Firestore server timestamp" },
+        "updatedAt": { "type": "string", "description": "Last updated timestamp" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "Booking": {
+      "title": "Booking",
+      "description": "Travel booking order for local, outstation, or package trips",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Booking document ID matching bookingCode" },
+        "bookingCode": { "type": "string", "description": "Human-readable booking reference e.g. ADV-2026-XXXXXX" },
+        "userId": { "type": "string", "description": "UID of customer or 'guest'" },
+        "customerName": { "type": "string", "description": "Passenger or booking contact name" },
+        "customerPhone": { "type": "string", "description": "Customer phone number" },
+        "customerEmail": { "type": "string", "format": "email", "description": "Customer email address" },
+        "tripType": { "type": "string", "enum": ["local", "outstation_oneway", "outstation_round", "tour_package"] },
+        "pickupCity": { "type": "string", "description": "Origin city" },
+        "dropCity": { "type": "string", "description": "Destination city" },
+        "pickupAddress": { "type": "string" },
+        "dropAddress": { "type": "string" },
+        "pickupDate": { "type": "string" },
+        "pickupTime": { "type": "string" },
+        "returnDate": { "type": "string" },
+        "vehicleId": { "type": "string" },
+        "vehicleName": { "type": "string" },
+        "estimatedDistanceKm": { "type": "number" },
+        "chargeableKm": { "type": "number" },
+        "estimatedTotalFare": { "type": "number" },
+        "advanceAmount": { "type": "number" },
+        "balanceAmount": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "confirmed", "paid", "driver_assigned", "in_progress", "completed", "cancelled"] },
+        "paymentStatus": { "type": "string", "enum": ["pending", "partial", "completed", "refunded"] },
+        "assignedDriverId": { "type": "string" },
+        "driverName": { "type": "string" },
+        "driverPhone": { "type": "string" }
+      },
+      "required": ["bookingCode", "userId", "customerName", "customerPhone", "tripType", "pickupCity", "dropCity", "status"]
+    },
+    "Vehicle": {
+      "title": "Vehicle",
+      "description": "Fleet vehicle listing and pricing structure",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "category": { "type": "string", "enum": ["sedan", "suv", "tempo", "luxury"] },
+        "ratePerKm": { "type": "number" },
+        "minKmPerDay": { "type": "number" },
+        "driverAllowancePerDay": { "type": "number" },
+        "capacityPassengers": { "type": "number" },
+        "capacityLuggage": { "type": "number" },
+        "isAvailable": { "type": "boolean" },
+        "imageUrl": { "type": "string" }
+      },
+      "required": ["id", "name", "category", "ratePerKm", "minKmPerDay"]
+    },
+    "TourPackage": {
+      "title": "TourPackage",
+      "description": "Curated holiday tour itinerary and pricing",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "destination": { "type": "string" },
+        "durationDays": { "type": "number" },
+        "durationNights": { "type": "number" },
+        "price": { "type": "number" },
+        "isActive": { "type": "boolean" }
+      },
+      "required": ["id", "title", "destination", "price"]
+    },
+    "Review": {
+      "title": "Review",
+      "description": "Customer feedback and ratings",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "customerName": { "type": "string" },
+        "rating": { "type": "number" },
+        "comment": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] }
+      },
+      "required": ["customerName", "rating", "comment", "status"]
+    },
+    "Driver": {
+      "title": "Driver",
+      "description": "Chauffeur pool and vehicle assignment details",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "licenseNumber": { "type": "string" },
+        "status": { "type": "string", "enum": ["available", "on_trip", "off_duty"] }
+      },
+      "required": ["id", "name", "phone", "licenseNumber", "status"]
+    },
+    "PaymentRecord": {
+      "title": "PaymentRecord",
+      "description": "Online payment transaction record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "bookingId": { "type": "string" },
+        "bookingCode": { "type": "string" },
+        "userId": { "type": "string" },
+        "amount": { "type": "number" },
+        "currency": { "type": "string" },
+        "status": { "type": "string", "enum": ["success", "failed", "pending"] },
+        "paymentMethod": { "type": "string" }
+      },
+      "required": ["id", "bookingId", "amount", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Stores user profile isolated by Firebase Auth UID"
+    },
+    "/bookings/{bookingId}": {
+      "schema": "Booking",
+      "description": "Stores trip reservations and fare estimates"
+    },
+    "/vehicles/{vehicleId}": {
+      "schema": "Vehicle",
+      "description": "Stores cab categories, per-km rates and configurations"
+    },
+    "/tourPackages/{packageId}": {
+      "schema": "TourPackage",
+      "description": "Stores tour itineraries and holiday packages"
+    },
+    "/reviews/{reviewId}": {
+      "schema": "Review",
+      "description": "Stores customer testimonials and ratings"
+    },
+    "/drivers/{driverId}": {
+      "schema": "Driver",
+      "description": "Stores driver profiles and assignment roster"
+    },
+    "/payments/{paymentId}": {
+      "schema": "PaymentRecord",
+      "description": "Stores payment gateway transaction proofs"
+    }
+  }
+}

@@ -1,0 +1,107 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.email == 'lakshmanchavan07@gmail.com' ||
+        request.auth.token.role == 'admin' ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Users collection
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow update: if (isOwner(userId) && request.resource.data.role == resource.data.role) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Vehicles collection
+    match /vehicles/{vehicleId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Tour Packages collection
+    match /tourPackages/{packageId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Bookings collection
+    match /bookings/{bookingId} {
+      // Authenticated users read their own bookings by UID; Admins read all; Guests read guest bookings
+      allow read: if isAdmin() || 
+        (isAuthenticated() && resource.data.userId == request.auth.uid) || 
+        resource.data.userId == 'guest';
+      
+      // User creates booking tied to their UID; guests can create with 'guest'
+      allow create: if (isAuthenticated() && request.resource.data.userId == request.auth.uid) || 
+        (!isAuthenticated() && request.resource.data.userId == 'guest');
+      
+      // Updates: Admin can update anything.
+      // Customer owner or guest can cancel if trip is still pending
+      allow update: if isAdmin() || (
+        isAuthenticated() && 
+        resource.data.userId == request.auth.uid &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'cancellationReason', 'updatedAt']) &&
+        request.resource.data.status == 'cancelled'
+      );
+      allow delete: if isAdmin();
+    }
+
+    // Drivers collection
+    match /drivers/{driverId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Payments collection
+    match /payments/{paymentId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if (isAuthenticated() && request.resource.data.userId == request.auth.uid) || (!isAuthenticated() && request.resource.data.userId == 'guest');
+      allow update, delete: if isAdmin();
+    }
+
+    // Reviews collection
+    match /reviews/{reviewId} {
+      allow read: if resource.data.status == 'approved' || isAdmin();
+      allow create: if request.resource.data.status == 'pending';
+      allow update, delete: if isAdmin();
+    }
+
+    // Enquiries collection
+    match /enquiries/{enquiryId} {
+      allow read: if isAdmin();
+      allow create: if true;
+      allow update, delete: if isAdmin();
+    }
+
+    // Pricing Rules collection
+    match /pricingRules/{ruleId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Audit logs
+    match /auditLogs/{logId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Connection health check
+    match /test/{docId} {
+      allow read, write: if true;
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "Remix Advik Tours and Travels - Premium Car Rental \u0026 Holiday Packages",
+  "description": "Book reliable cabs, outstation taxis, one-way trips, and customized holiday tour packages with Advik Tours and Travels. Affordable per-km pricing, professional drivers, and sanitized vehicles.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
